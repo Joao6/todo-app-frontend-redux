@@ -1,6 +1,17 @@
 import React from "react";
 import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
+
 import IconButton from "../template/iconButton";
+
+import {
+  changeDescriptionEdit,
+  edit,
+  markAsDone,
+  markAsPending,
+  markForEdit,
+  remove
+} from "./todoActions";
 
 const TodoList = props => {
   const renderRows = () => {
@@ -8,14 +19,14 @@ const TodoList = props => {
     return list.map(todo => (
       <tr key={todo._id}>
         <td className={todo.done ? "markedAsDone" : ""}>
-          {props.todoInEditing !== todo._id && todo.description}
-          {props.todoInEditing === todo._id && (
+          {props.todoInEditing._id !== todo._id && todo.description}
+          {props.todoInEditing._id === todo._id && (
             <input
               id="input-edit"
               className="form-control"
               type="text"
               onKeyUp={props.keyHandler}
-              onChange={props.handleChangeEdit}
+              onChange={props.changeDescriptionEdit}
               value={props.descriptionForEdit}
             />
           )}
@@ -24,32 +35,34 @@ const TodoList = props => {
           <IconButton
             style="success"
             icon="thumbs-up"
-            hide={todo.done || props.todoInEditing === todo._id}
-            onClick={() => props.handleMarkAsDone(todo)}
+            hide={todo.done || props.todoInEditing._id === todo._id}
+            onClick={() => props.markAsDone(todo)}
           />
           <IconButton
             style="info"
             icon="check"
-            hide={props.todoInEditing !== todo._id}
-            onClick={() => props.handleEdit()}
+            hide={props.todoInEditing._id !== todo._id}
+            onClick={() =>
+              props.edit({ ...todo, description: props.descriptionForEdit })
+            }
           />
           <IconButton
             style="default"
             icon="pencil"
-            hide={props.todoInEditing === todo._id || todo.done}
-            onClick={() => props.handleMarkForEdit(todo)}
+            hide={props.todoInEditing._id === todo._id || todo.done}
+            onClick={() => props.markForEdit(todo)}
           />
           <IconButton
             style="warning"
             icon="undo"
             hide={!todo.done}
-            onClick={() => props.handleMarkAsPending(todo)}
+            onClick={() => props.markAsPending(todo)}
           />
           <IconButton
             style="danger"
             icon="trash-o"
             hide={!todo.done}
-            onClick={() => props.handleRemove(todo)}
+            onClick={() => props.remove(todo)}
           />
         </td>
       </tr>
@@ -72,7 +85,25 @@ const TodoList = props => {
 };
 
 const mapStateToProps = state => ({
-  list: state.todo.list
+  list: state.todo.list,
+  todoInEditing: state.todo.todoInEditing,
+  descriptionForEdit: state.todo.descriptionForEdit
 });
 
-export default connect(mapStateToProps)(TodoList);
+const mapDispatchToProps = dispatch =>
+  bindActionCreators(
+    {
+      changeDescriptionEdit,
+      edit,
+      markAsDone,
+      markAsPending,
+      markForEdit,
+      remove
+    },
+    dispatch
+  );
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(TodoList);
